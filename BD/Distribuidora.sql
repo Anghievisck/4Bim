@@ -443,7 +443,7 @@ call spInsertCliPJ('Semgrana', 12345678912347, 98765432100, 12345060, 'Rua dos A
 call spInsertCliPJ('Cemreais', 12345678912348, 98765432101, 12345060, 'Rua dos Amores', 5024, 'Sala 23', 'Sei Lá', 'Recife', 'PE');
 call spInsertCliPJ('Durango', 12345678912349, 98765432102, 12345060, 'Rua dos Amores', 1254, null, 'Sei Lá', 'Recife', 'PE');
 
-call spInsertCompra(8459, 'Amoroso e Doce', '2018-05-01', 12345678910111, 22.22, 200, 700, 21944.00);
+call spInsertCompra(8459, 'Amoroso e Doce', '2018-05-01', 12345678910111, 22.22, 100, 700, 21944.00);
 call spInsertCompra(2482, 'Revenda Chico Loco', '2020-04-22', 12345678910112, 40.50, 180, 180, 7290.00);
 call spInsertCompra(21563, 'Marcelo Dedal', '2020-07-12', 12345678910113, 3.00, 300, 300, 900.00);
 call spInsertCompra(8459, 'Amoroso e Doce', '2020-12-04', 12345678910114, 35.00, 500, 700, 21944.00);
@@ -473,6 +473,7 @@ call spUpdateProd(12345678910119, 'Água mineral', 2.99);
 call spInsertVenda('Disney Chaplin', 12345678910111, 1, null);
 
 call spSelectCli("Disney Chaplin");
+call spSelectProd();
 
 call spInsertVenda('Paganada', 12345678910114, 15, null);
 
@@ -503,5 +504,25 @@ select * from tbVenda order by NumeroVenda desc limit 1;
 select * from tbItemVenda order by NumeroVenda desc limit 1;
 
 /*
----------------------------------------------------------------------------- Exercício 32 -------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------- EXTRAS --------------------------------------------------------------------------------
+
+Método para recuperar a query de um insert:
+
+show create procedure spInsertVenda;
+
+depois clicar com o botão direito do mouse no dado do campo: Create procedure e copiar o Field.
+ex do field copiado: 'CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsertVenda`(vCliente varchar(200), vCodBarras decimal(14,0), vQtd int, vNF int)
+begin
+	declare vValorItem decimal(6,2);
+    declare vTotalVenda int;
+    
+    set @IdCli = (select Id from tbCliente where Nome = vCliente);
+    set @DataVenda = current_timestamp();
+    set @CodBarras = (select CodBarras from tbProduto where CodBarras = vCodBarras);
+	set vValorItem = (select ValorUnitario from tbProduto where CodBarras = vCodBarras);
+	set vTotalVenda = vValorItem * vQtd;
+
+	insert into tbVenda(IdCliente, DataVenda, TotalVenda, NotaFiscal) values (@IdCli, @DataVenda, vTotalVenda, vNF);
+	insert into tbItemVenda(NumeroVenda, CodBarras, Qtd, ValorItem) values ((select NumeroVenda from tbVenda order by NumeroVenda desc limit 1), @CodBarras, vQtd, vValorItem);
+end'
 */
