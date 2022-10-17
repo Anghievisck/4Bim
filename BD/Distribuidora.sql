@@ -41,7 +41,7 @@ create table tbCliente (
 );
 
 create table tbClientePF (
- IdCliente int auto_increment,
+ IdCliente int,
  foreign key (IdCliente) references tbCliente(Id),
  Cpf decimal(11,0) not null primary key,
  Rg decimal(8,0),
@@ -50,7 +50,7 @@ create table tbClientePF (
 );
 
 create table tbClientePJ (
- IdCliente int auto_increment,
+ IdCliente int,
  foreign key (IdCliente) references tbCliente(Id),
  Cnpj decimal(14,0) not null primary key,
  Ie decimal(11,0)
@@ -211,7 +211,7 @@ begin
 		end if;
     
 		insert into tbCliente(Nome, CEP, NumEnd, CompEnd) values (vNome, vCEP, vNumEnd, vCompEnd);
-		insert into tbClientePF(CPF, RG, RgDig, Nasc) values (vCPF, vRG, vRgDig, vNasc);
+		insert into tbClientePF(IdCliente, CPF, RG, RgDig, Nasc) values ((Select Id from tbCliente order by Id desc limit 1), vCPF, vRG, vRgDig, vNasc);
 	else
 		select "Existe";
 	end if;
@@ -220,7 +220,6 @@ end $$
 delimiter $$
 create procedure spInsertCliPJ (vNome varchar(50), vCNPJ decimal(14,0), vIE decimal(11,0), vCEP decimal(8,0), vLogradouro varchar(200), vNumEnd decimal(6,0), vCompEnd varchar(50),
 vBairro varchar(200), vCidade varchar(200), vUF char(2))
-
 begin
     if not exists (select Cnpj from tbClientePJ where Cnpj = vCNPJ) then
 		if not exists (select CEP from tbEndereco where CEP = vCEP) then
@@ -245,11 +244,13 @@ begin
 		end if;
         
 			insert into tbCliente(Nome, CEP, NumEnd, CompEnd) value(vNome, vCEP, vNumEnd, vCompEnd);
-			insert into tbClientePJ(Cnpj, Ie) value (vCNPJ, vIE);
+			insert into tbClientePJ(IdCliente, Cnpj, Ie) value ((Select Id from tbCliente order by Id desc limit 1), vCNPJ, vIE);
 	else
 		select "Existe";
 	end if;
 end $$
+
+select * from tbClientePJ;
 
 delimiter $$
 create procedure spInsertCompra(vNotaFiscal int, vFornecedor varchar(200), vDataCompra date, vCodBarras decimal(14,0), vValorItem decimal(6,2),
@@ -427,9 +428,9 @@ call spInsertEndereco(12345051, 'Av Brasil', 'Lapa', 'Campinas', 'SP');
 call spInsertEndereco(12345052, 'Rua Liberdade', 'Consolação', 'São Paulo', 'SP');
 call spInsertEndereco(12345053, 'Av Paulista', 'Penha', 'Rio de Janeiro', 'RJ');
 call spInsertEndereco(12345054, 'Rua Ximbú', 'Penha', 'Rio de Janeiro', 'RJ');
-call spInsertEndereco(12345055, 'Rua Piu XI', 'Penha', 'Campina', 'SP');
+call spInsertEndereco(12345055, 'Rua Piu XI', 'Penha', 'Campinas', 'SP');
 call spInsertEndereco(12345056, 'Rua Chocolate', 'Aclimação', 'Barra Mansa', 'RJ');
-call spInsertEndereco(12345057, 'Rua Pão na Chapa', 'Barra Funda', 'Ponto Grossa', 'RS');
+call spInsertEndereco(12345057, 'Rua Pão na Chapa', 'Barra Funda', 'Ponta Grossa', 'RS');
 
 call spInsertCliente('Pimpão', 325, null, 12345051, 12345678911, 12345678, 0, '2000-12-10', 'Av. Brasil', 'Lapa', 'Campinas', 'SP');
 call spInsertCliente('Disney Chaplin', 89, 'Ap. 12', 12345053, 12345678912, 12345679, 0, '2001-11-21', 'Av. Paulista', 'Penha', 'Rio de Janeiro', 'RJ');
@@ -526,3 +527,27 @@ begin
 	insert into tbItemVenda(NumeroVenda, CodBarras, Qtd, ValorItem) values ((select NumeroVenda from tbVenda order by NumeroVenda desc limit 1), @CodBarras, vQtd, vValorItem);
 end'
 */
+
+-- Exercício 32
+select * from tbCliente inner join tbClientePF on tbCliente.ID = tbClientePF.IDCliente;
+
+-- Exercício 33
+select * from tbCliente inner join tbClientePJ on tbCliente.ID = tbClientePJ.IDCliente;
+
+-- Exercício 34
+select Id, Nome, CNPJ, IE, IdCliente from tbCliente inner join tbClientePJ on tbCliente.ID = tbClientePJ.IDCliente;
+
+-- Exercício 35
+select Id as "Código", Nome, Cpf as "CPF", Rg as "RG", Nasc as "Data de Nascimento" from tbCliente inner join tbClientePF on tbCliente.ID = tbClientePF.IDCliente;
+
+-- Exercício 36
+select * from tbCliente inner join tbClientePJ on tbCliente.ID = tbClientePJ.IDCliente inner join tbEndereco on tbCliente.CEP = tbEndereco.CEP;
+
+-- Exercício 37
+select ID, Nome, CEP, Logradouro, NumEnd, CompEnd, Bairro, Cidade, UF 
+from tbCliente 
+inner join tbClientePJ 
+on tbCliente.ID = tbClientePJ.IDCliente 
+inner join tbEndereco 
+on tbCliente.CEP = tbEndereco.CEP;
+on tbCliente.CEP = tbEndereco.CEP;
