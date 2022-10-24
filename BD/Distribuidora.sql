@@ -1,4 +1,4 @@
-drop database dbDistribuidora;
+-- drop database dbDistribuidora;
 
 -- criando db e pondo em uso
 create database dbDistribuidora;
@@ -34,10 +34,10 @@ create table tbEndereco (
 create table tbCliente (
  Id int primary key auto_increment,
  Nome varchar(50) not null,
- CEP decimal(8,0) not null,
+ CEPcli decimal(8,0) not null,
  NumEnd decimal(6,0) not null,
  CompEnd varchar(50),
- foreign key (CEP) references tbEndereco(CEP)
+ foreign key (CEPcli) references tbEndereco(CEP)
 );
 
 create table tbClientePF (
@@ -81,7 +81,7 @@ create table tbCompra (
 create table tbProduto (
  CodBarras decimal(14,0) primary key,
  Qtd int,
- Nome varchar(200) not null,
+ NomeProd varchar(200) not null,
  ValorUnitario decimal(6, 2) not null
 );
 
@@ -153,7 +153,7 @@ delimiter $$
 create procedure spInsertProduto(vCodBarras decimal(14,0), vNome varchar(200), vValorUnitario decimal(6, 2), vQtd int)
 begin
 	if not exists (select CodBarras from tbProduto where CodBarras = vCodBarras) then
-		insert into tbProduto(CodBarras, Nome, ValorUnitario, Qtd) values (vCodBarras, vNome, vValorUnitario, vQtd); 
+		insert into tbProduto(CodBarras, NomeProd, ValorUnitario, Qtd) values (vCodBarras, vNome, vValorUnitario, vQtd); 
 	else
 		select 'Já Existe';
     end if;
@@ -210,7 +210,7 @@ begin
 			(vCEP, vLogradouro, @IdBairro, @IdCidade, @IdUF); 
 		end if;
     
-		insert into tbCliente(Nome, CEP, NumEnd, CompEnd) values (vNome, vCEP, vNumEnd, vCompEnd);
+		insert into tbCliente(Nome, CEPcli, NumEnd, CompEnd) values (vNome, vCEP, vNumEnd, vCompEnd);
 		insert into tbClientePF(IdCliente, CPF, RG, RgDig, Nasc) values ((Select Id from tbCliente order by Id desc limit 1), vCPF, vRG, vRgDig, vNasc);
 	else
 		select "Existe";
@@ -243,7 +243,7 @@ begin
 			(vCEP, vLogradouro, @IdBairro, @IdCidade, @IdUF); 
 		end if;
         
-			insert into tbCliente(Nome, CEP, NumEnd, CompEnd) value(vNome, vCEP, vNumEnd, vCompEnd);
+			insert into tbCliente(Nome, CEPcli, NumEnd, CompEnd) value(vNome, vCEP, vNumEnd, vCompEnd);
 			insert into tbClientePJ(IdCliente, Cnpj, Ie) value ((Select Id from tbCliente order by Id desc limit 1), vCNPJ, vIE);
 	else
 		select "Existe";
@@ -304,7 +304,7 @@ delimiter $$
 create procedure spUpdateProd(vCodBarras decimal(14,0), vNome varchar(200), vValorUnitario decimal(6, 2))
 	begin
 		if exists (select CodBarras from tbProduto where CodBarras = vCodBarras) then
-			update tbProduto set Nome = vNome, ValorUnitario = vValorUnitario where CodBarras = vCodBarras;
+			update tbProduto set NomeProd = vNome, ValorUnitario = vValorUnitario where CodBarras = vCodBarras;
 		end if;
     end;
 $$
@@ -344,7 +344,7 @@ delimiter $$
 	 insert into tbProdHistorico
      set CodBarras = new.CodBarras,
 		 Qtd = new.Qtd, 
-         Nome = new.Nome,
+         NomeProd = new.NomeProd,
          ValorUnitario = new.ValorUnitario,
          Atualizacao = current_timestamp(),
          Situacao = 'Novo';
@@ -357,7 +357,7 @@ begin
 	insert into tbProdHistorico
 		set CodBarras = new.CodBarras,
 			Qtd = new.Qtd, 
-			Nome = new.Nome,
+			NomeProd = new.NomeProd,
 			ValorUnitario = new.ValorUnitario,
 			Atualizacao = current_timestamp(),
 			Situacao = 'Atualizado';
@@ -541,13 +541,45 @@ select Id, Nome, CNPJ, IE, IdCliente from tbCliente inner join tbClientePJ on tb
 select Id as "Código", Nome, Cpf as "CPF", Rg as "RG", Nasc as "Data de Nascimento" from tbCliente inner join tbClientePF on tbCliente.ID = tbClientePF.IDCliente;
 
 -- Exercício 36
-select * from tbCliente inner join tbClientePJ on tbCliente.ID = tbClientePJ.IDCliente inner join tbEndereco on tbCliente.CEP = tbEndereco.CEP;
+select * from tbCliente inner join tbClientePJ on tbCliente.ID = tbClientePJ.IDCliente inner join tbEndereco on tbCliente.CEPcli = tbEndereco.CEP;
 
 -- Exercício 37
 select ID, Nome, CEP, Logradouro, NumEnd, CompEnd, Bairro, Cidade, UF 
-from tbCliente 
-inner join tbClientePJ 
-on tbCliente.ID = tbClientePJ.IDCliente 
-inner join tbEndereco 
-on tbCliente.CEP = tbEndereco.CEP;
-on tbCliente.CEP = tbEndereco.CEP;
+from tbCliente inner join tbClientePJ on tbCliente.ID = tbClientePJ.IDCliente inner join tbEndereco on tbCliente.CEPcli = tbEndereco.CEP
+inner join tbBairro on tbEndereco.IdBairro = tbBairro.IdBairro
+inner join tbCidade on tbEndereco.IdCidade = tbCidade.IdCidade
+inner join tbUF on tbEndereco.IdUF = tbUf.IdUF;
+
+-- Exercício 38
+delimiter $$
+create procedure spSelectFullCli(vId int)
+	Begin
+		select Id as "Codígo", Nome as "Nome", CPF, RG, RGDig as "Digito", Nasc as "Data de Nascimento", CEP, Logradouro, NumEnd as "Número", CompEnd as "Complemento", Bairro, Cidade, Uf
+        from tbCliente inner join tbClientePF on tbCliente.Id = tbClientePF.IdCliente
+        inner join tbEndereco on tbCliente.CEPcli = tbEndereco.CEP
+		inner join tbBairro on tbEndereco.IdBairro = tbBairro.IdBairro
+		inner join tbCidade on tbEndereco.IdCidade = tbCidade.IdCidade
+		inner join tbUF on tbEndereco.IdUF = tbUf.IdUF where tbCliente.Id = vId;
+    end;
+$$
+
+call spSelectFullCli(2);
+call spSelectFullCli(5);
+
+-- Exercício 39
+select * from tbProduto left join tbItemVenda on tbProduto.CodBarras = tbItemVenda.CodBarras;
+
+-- Exercício 40
+select * from tbCompra right join tbFornecedor on tbCompra.Cod_Fornecedor = tbFornecedor.Codigo;
+
+-- Exercício 41
+select Codigo, CNPJ, Nome, Telefone from tbCompra
+right join tbFornecedor on tbCompra.Cod_Fornecedor = tbFornecedor.Codigo where tbCompra.NotaFiscal is Null;
+
+-- Exercício 42
+select Id, Nome, DataVenda, CodBarras, NomeProd, ValorItem from tbCliente inner join tbVenda on tbCliente.Id = tbVenda.IdCliente inner join tbItemVenda
+
+tbCliente Nome Id
+tbItemVenda CodBarras ValorItem
+tbVenda DataVenda Id
+tbProduto Nome
