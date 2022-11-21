@@ -123,7 +123,9 @@ begin
 	else
 		select 'Já Existe';
 	end if;
-end $$
+end;
+$$
+delimiter ;
 
 delimiter $$
 create procedure spInsertCidade(vCidade varchar(200))
@@ -131,15 +133,19 @@ begin
 if not exists (select IdCidade from tbCidade where Cidade = vCidade) then
 	insert into tbCidade(Cidade) values (vCidade);
 end if;
-end $$
+end;
+$$
+delimiter ;
 
 delimiter $$
 create procedure spInsertUF(vUF char(2))
 begin
-if not exists (select IdUf from tbUF where UF = vUF) then
-	insert into tbUF(UF) values (vUF);
-end if;
-end $$
+	if not exists (select IdUf from tbUF where UF = vUF) then
+		insert into tbUF(UF) values (vUF);
+	end if;
+end;
+$$
+delimiter ;
 
 delimiter $$
 create procedure spInsertBairro(vBairro varchar(200))
@@ -147,7 +153,9 @@ begin
 if not exists (select IdBairro from tbBairro where Bairro = vBairro) then
 	insert into tbBairro(Bairro) values (vBairro);
 end if;
-end $$
+end;
+$$
+delimiter ;
 
 delimiter $$
 create procedure spInsertProduto(vCodBarras decimal(14,0), vNome varchar(200), vValorUnitario decimal(6, 2), vQtd int)
@@ -157,7 +165,9 @@ begin
 	else
 		select 'Já Existe';
     end if;
-end $$
+end;
+$$
+delimiter ;
 
 delimiter $$
 create procedure spInsertEndereco(vCEP decimal(8,0), vLogradouro varchar(200), vBairro varchar(200), vCidade varchar(200), vUF char(2))
@@ -182,7 +192,9 @@ if not exists (select CEP from tbEndereco where CEP = vCEP) then
 	insert into tbEndereco(CEP, Logradouro, IdBairro, IdCidade, IdUF) values
 	(vCEP, vLogradouro, @IdBairro, @IdCidade, @IdUF); 
 end if;
-end $$
+end;
+$$
+delimiter ;
 
 delimiter $$
 create procedure spInsertCliente (vNome varchar(50), vNumEnd decimal(6,0), vCompEnd varchar(50), vCEP decimal(8,0), vCPF decimal(11,0), vRG decimal(8,0), vRgDig char(1), vNasc date,
@@ -215,7 +227,9 @@ begin
 	else
 		select "Existe";
 	end if;
-end $$
+end;
+$$
+delimiter ;
 
 delimiter $$
 create procedure spInsertCliPJ (vNome varchar(50), vCNPJ decimal(14,0), vIE decimal(11,0), vCEP decimal(8,0), vLogradouro varchar(200), vNumEnd decimal(6,0), vCompEnd varchar(50),
@@ -248,7 +262,9 @@ begin
 	else
 		select "Existe";
 	end if;
-end $$
+end;
+$$
+delimiter ;
 
 select * from tbClientePJ;
 
@@ -261,7 +277,9 @@ begin
         (select codigo from tbFornecedor where Nome = vFornecedor));
 	end if;
         insert into tbItemCompra(Qtd, ValorItem, NotaFiscal, CodBarras) values (vQtd, vValorItem, vNotaFiscal, vCodBarras);
-end $$
+end;
+$$
+delimiter ;
 
 delimiter $$
 create procedure spInsertVenda(vCliente varchar(200), vCodBarras decimal(14,0), vQtd int, vNF int)
@@ -277,7 +295,9 @@ begin
 
 	insert into tbVenda(IdCliente, DataVenda, TotalVenda, NotaFiscal) values (@IdCli, @DataVenda, vTotalVenda, vNF);
 	insert into tbItemVenda(NumeroVenda, CodBarras, Qtd, ValorItem) values ((select NumeroVenda from tbVenda order by NumeroVenda desc limit 1), @CodBarras, vQtd, vValorItem);
-end $$
+end;
+$$
+delimiter ;
 
 delimiter $$
 create procedure spInsertNF(vNF int, vCliente varchar(200), vDataEmissao char(10))
@@ -289,7 +309,9 @@ begin
 	if not exists (select NF from tbNotaFiscal where NF = vNF) then
 		insert into tbNotaFiscal(NF, TotalNota, DataEmissao) values (vNF, @ValorTotal, @DataEmissao);
 	end if;
-end $$
+end;
+$$
+delimiter ;
 
 delimiter $$
 create procedure spDeleteProd(vCodBarras decimal(14,0))
@@ -299,6 +321,7 @@ create procedure spDeleteProd(vCodBarras decimal(14,0))
 		end if;
     end;
 $$
+delimiter ;
 
 delimiter $$
 create procedure spUpdateProd(vCodBarras decimal(14,0), vNome varchar(200), vValorUnitario decimal(6, 2))
@@ -308,6 +331,7 @@ create procedure spUpdateProd(vCodBarras decimal(14,0), vNome varchar(200), vVal
 		end if;
     end;
 $$
+delimiter ;
 
 delimiter $$ 
 create procedure spSelectProd()
@@ -315,6 +339,7 @@ create procedure spSelectProd()
 		select * from tbProduto;
 	end;
 $$
+delimiter ;
 
 delimiter $$ 
 create procedure spSelectCli(vNome varchar(50))
@@ -322,6 +347,7 @@ create procedure spSelectCli(vNome varchar(50))
 		select * from tbCliente where Nome = vNome;
 	end;
 $$
+delimiter ;
 
 -- criando uma tabela histórico para a tabela produto
 create table tbProdHistorico like tbProduto;
@@ -350,6 +376,7 @@ delimiter $$
          Situacao = 'Novo';
 	end;
 $$
+delimiter ;
 
 delimiter $$
 create trigger tgrHistoricoUpdate after update on tbProduto for each row
@@ -363,6 +390,7 @@ begin
 			Situacao = 'Atualizado';
 end;
 $$
+delimiter ;
 
 delimiter $$
 create trigger trgCtrlEstoque after insert on tbItemVenda for each row
@@ -374,6 +402,7 @@ create trigger trgCtrlEstoque after insert on tbItemVenda for each row
         update tbProduto set Qtd = Qtd - vVendido where CodBarras = vProd;
 	end;
 $$
+delimiter ;
 
 delimiter $$
 create trigger trgCtrlEstoqueCompra after insert on tbItemCompra for each row
@@ -385,6 +414,7 @@ create trigger trgCtrlEstoqueCompra after insert on tbItemCompra for each row
         update tbProduto set Qtd = Qtd + vVendido where CodBarras = vProd;
 	end;
 $$
+delimiter ;
 
 -- chamando os atalhos
 call spInsertForn('Revenda Chico Loco', 1245678937123, 11934567897);
@@ -554,17 +584,23 @@ inner join tbUF on tbEndereco.IdUF = tbUf.IdUF;
 delimiter $$
 create procedure spSelectFullCli(vId int)
 	Begin
-		select Id as "Codígo", Nome as "Nome", CPF, RG, RGDig as "Digito", Nasc as "Data de Nascimento", CEP, Logradouro, NumEnd as "Número", CompEnd as "Complemento", Bairro, Cidade, Uf
-        from tbCliente inner join tbClientePF on tbCliente.Id = tbClientePF.IdCliente
-        inner join tbEndereco on tbCliente.CEPcli = tbEndereco.CEP
-		inner join tbBairro on tbEndereco.IdBairro = tbBairro.IdBairro
-		inner join tbCidade on tbEndereco.IdCidade = tbCidade.IdCidade
-		inner join tbUF on tbEndereco.IdUF = tbUf.IdUF where tbCliente.Id = vId;
+		if exists (select IdCliente from tbCLientePF where IdCliente = vId) then
+			select Id as "Codígo", Nome as "Nome", CPF, RG, RGDig as "Digito", Nasc as "Data de Nascimento", CEP, Logradouro, NumEnd as "Número", CompEnd as "Complemento", Bairro, Cidade, Uf
+			from tbCliente inner join tbClientePF on tbCliente.Id = tbClientePF.IdCliente
+			inner join tbEndereco on tbCliente.CEPcli = tbEndereco.CEP
+			inner join tbBairro on tbEndereco.IdBairro = tbBairro.IdBairro
+			inner join tbCidade on tbEndereco.IdCidade = tbCidade.IdCidade
+			inner join tbUF on tbEndereco.IdUF = tbUf.IdUF where tbCliente.Id = vId;
+		else
+			select "Não há registro";
+        end if;
     end;
 $$
+delimiter ;
 
 call spSelectFullCli(2);
 call spSelectFullCli(5);
+call spSelectFullCli(7);
 
 -- Exercício 39
 select * from tbProduto left join tbItemVenda on tbProduto.CodBarras = tbItemVenda.CodBarras;
@@ -573,13 +609,51 @@ select * from tbProduto left join tbItemVenda on tbProduto.CodBarras = tbItemVen
 select * from tbCompra right join tbFornecedor on tbCompra.Cod_Fornecedor = tbFornecedor.Codigo;
 
 -- Exercício 41
-select Codigo, CNPJ, Nome, Telefone from tbCompra
-right join tbFornecedor on tbCompra.Cod_Fornecedor = tbFornecedor.Codigo where tbCompra.NotaFiscal is Null;
+select Codigo, CNPJ, Nome, Telefone from tbCompra right join tbFornecedor on tbCompra.Cod_Fornecedor = tbFornecedor.Codigo where tbCompra.NotaFiscal is null;
 
 -- Exercício 42
-select Id, Nome, DataVenda, CodBarras, NomeProd, ValorItem from tbCliente inner join tbVenda on tbCliente.Id = tbVenda.IdCliente inner join tbItemVenda
+select Id, tbCliente.Nome, DataVenda, tbItemVenda.CodBarras, tbProduto.Nome, ValorItem from tbCliente inner join tbVenda on tbCliente.Id = tbVenda.IdCliente
+inner join tbItemVenda on tbVenda.NumeroVenda = tbItemVenda.NumeroVenda 
+inner join tbProduto on tbItemVenda.CodBarras = tbProduto.CodBarras;
 
-tbCliente Nome Id
-tbItemVenda CodBarras ValorItem
-tbVenda DataVenda Id
-tbProduto Nome
+-- Exercício 43
+select distinct Bairro from tbEndereco inner join tbCliente on tbCliente.CEPcli = tbEndereco.CEP
+inner join tbVenda on tbCliente.Id = tbVenda.IdCliente
+right join tbBairro on tbBairro.IdBairro = tbEndereco.IdBairro
+where tbVenda.NumeroVenda is null;
+
+-- Exercício 44
+create view vwtbForn as select Codigo, Nome, Telefone from tbFornecedor;
+select * from vwtbforn;
+
+-- Exercício 45
+select Nome, Telefone from vwtbforn;
+
+-- Exercício 46
+create view vwClientePJ as select Id, Nome, CEP, Logradouro, NumEnd, CompEnd, Bairro, Cidade, Uf from tbCliente inner join tbClientePJ on tbCliente.Id = tbClientePJ.IdCliente
+	inner join tbEndereco on tbCliente.CEPcli = tbEndereco.CEP inner join tbBairro on tbEndereco.IdBairro = tbBairro.IdBairro
+	inner join tbCidade on tbEndereco.IdCidade = tbCidade.IdCidade inner join tbUF on tbEndereco.IdUF = tbUf.IdUF;
+select * from vwClientePJ;
+
+-- Exercício 47
+select Id as "Código", Nome as "Cliente", CEP, Logradouro as "Endereço", NumEnd as "Número", CompEnd as "Complemento", Bairro, Cidade, UF as "UF" from vwClientePJ;
+
+-- Exercício 48
+create view vwClientePF as select Id, Nome, CPF, RG, RGDig, Nasc, CEP, Logradouro, NumEnd, CompEnd, Bairro, Cidade, Uf from tbCliente inner join tbClientePF on tbCliente.Id = tbClientePF.IdCliente
+	inner join tbEndereco on tbCliente.CEPcli = tbEndereco.CEP inner join tbBairro on tbEndereco.IdBairro = tbBairro.IdBairro
+	inner join tbCidade on tbEndereco.IdCidade = tbCidade.IdCidade inner join tbUF on tbEndereco.IdUF = tbUf.IdUF;
+select * from vwClientePF;
+
+-- Exercício 49
+select Id as "Codígo", Nome as "Cliente", CPF, RG, RGDig as "Dig", Nasc as "Nascimento" from vwClientePF;
+
+-- Exercício 50
+create or replace view vwClientePJ as select Id, Nome, CNPJ, IE, CEP, Logradouro, NumEnd, CompEnd, Bairro, Cidade, Uf from tbCliente inner join tbClientePJ on tbCliente.Id = tbClientePJ.IdCliente
+	inner join tbEndereco on tbCliente.CEPcli = tbEndereco.CEP inner join tbBairro on tbEndereco.IdBairro = tbBairro.IdBairro
+	inner join tbCidade on tbEndereco.IdCidade = tbCidade.IdCidade inner join tbUF on tbEndereco.IdUF = tbUf.IdUF;
+select * from vwClientePJ;
+
+-- Exercício 51
+select Id, Nome, CEP, Logradouro, NumEnd, CompEnd, Bairro, Cidade, UF from vwClientePf union select Id, Nome, CEP, Logradouro, NumEnd, CompEnd, Bairro, Cidade, UF from vwCLientePJ;
+
+-- Exercício 52
